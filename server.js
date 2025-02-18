@@ -10,7 +10,7 @@ app.use(express.json());
 
 connectDB
 
-app.use('/api/authenticate', useRoutes)
+app.use('/api/auth', useRoutes)
 
 app.listen(PORT, ()=>{
   console.log(`Server is running on port: ${PORT}`);
