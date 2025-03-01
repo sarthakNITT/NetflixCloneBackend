@@ -22,7 +22,7 @@ exports.removeFromWatchlist = async (req, res) => {
     const { id } = req.params;
   
     try {
-      const watchlistItem = await Watchlist.findByIdAndDelete(id);
+      const watchlistItem = await Watchlist.findOneAndDelete({ movie: id });
       if (!watchlistItem) {
         return res.status(404).json({ message: 'Watchlist item not found' });
       }

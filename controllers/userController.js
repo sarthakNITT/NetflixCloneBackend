@@ -110,19 +110,25 @@ const loginUser = asyncHandler(async(req,res)=>{
     }
 })
 
-const logoutUser = asyncHandler(async(req,res)=>{
-    const token = req.headers.authorization.split(' ')[1]
-    
-    if(token!==User.token){
-        res.status(400).json({message: "Invalid token"})
-        console.log("Invalid token in authorisation");
-        throw new Error("Invalid token")
+const logoutUser = asyncHandler(async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(400).json({ message: "Authorization header missing or improperly formatted" });
+    }
+    const token = authHeader.split(" ")[1];
+
+    try {
+        jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+        console.log("Invalid token in authorization");
+        return res.status(400).json({ message: "Invalid token" });
     }
 
-    const blacklistedToken = new blacklist({token})
-    await blacklistedToken.save()
-    res.status(200).json({message: "LogOut Successfully"})
-})
+    const blacklistedToken = new blacklist({ token });
+    await blacklistedToken.save();
+    res.status(200).json({ message: "Logged out successfully" });
+});
+
 
 const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {
@@ -131,15 +137,18 @@ const generateToken = (id) => {
 }
 
 const resetPassword = asyncHandler(async(req,res)=>{
-    const {email, newpassword, confirmPassword} = req.body
+    const {email, number, newpassword, confirmPassword} = req.body
 
-    if(!email || !newpassword || !confirmPassword){
+    if((!email && !number) ||  !newpassword || !confirmPassword ){
         console.error("All fields are required");
         res.status(400).json({message: "All fields are required"})
         throw new Error("All fields are required")
     }
+    
 
-    const user = await User.findOne({email})
+    const user = await User.findOne({
+        $or: [{email: email}, {number: number}]
+    })
 
     if(!user){
         console.error("User not found");
