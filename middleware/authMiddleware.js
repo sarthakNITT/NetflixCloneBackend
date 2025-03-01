@@ -17,7 +17,7 @@ const protect = asyncHandler(async(req,res,next)=>{
         throw new Error("Not Authorised, token is blacklisted")
       }
       
-      const decoded = jwt.verify(token, process.env.JWT_Secret)
+      const decoded = jwt.verify(token, process.env.JWT_SECRET)
       
       req.user = await User.findById(decoded.id).select('-password')
       
